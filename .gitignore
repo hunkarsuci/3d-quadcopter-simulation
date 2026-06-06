@@ -11,6 +11,13 @@ drone_flight.gif
 !assets/
 !assets/drone_flight.gif
 *.log
+ci_artifacts/
+release_artifacts/
+
+# Coverage output
+.coverage
+coverage.xml
+htmlcov/
 
 # Project/IDE files
 .vscode/

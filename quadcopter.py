@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Quadcopter:
     """
     Quadcopter 3D Physics and Dynamics Model.
@@ -15,19 +16,22 @@ class Quadcopter:
     - Motor 3: Rear-Right (RR), CCW (Reacts CW -> Negative Yaw Torque)
     - Motor 4: Rear-Left (RL), CW (Reacts CCW -> Positive Yaw Torque)
     """
-    def __init__(self,
-                 mass=1.5,          # Kg
-                 Ixx=0.08,          # Kg*m^2
-                 Iyy=0.08,          # Kg*m^2
-                 Izz=0.15,          # Kg*m^2
-                 L=0.25,            # Arm length (m)
-                 c_tf=0.015,        # Drag torque to thrust ratio (m)
-                 c_drag=0.1,        # Translational drag coefficient
-                 g=9.81):           # Gravity (m/s^2)
+
+    def __init__(
+        self,
+        mass=1.5,  # Kg
+        Ixx=0.08,  # Kg*m^2
+        Iyy=0.08,  # Kg*m^2
+        Izz=0.15,  # Kg*m^2
+        L=0.25,  # Arm length (m)
+        c_tf=0.015,  # Drag torque to thrust ratio (m)
+        c_drag=0.1,  # Translational drag coefficient
+        g=9.81,
+    ):  # Gravity (m/s^2)
 
         self.mass = mass
         self.I = np.diag([Ixx, Iyy, Izz])
-        self.I_inv = np.diag([1.0/Ixx, 1.0/Iyy, 1.0/Izz])
+        self.I_inv = np.diag([1.0 / Ixx, 1.0 / Iyy, 1.0 / Izz])
         self.L = L
         self.c_tf = c_tf
         self.c_drag = c_drag
@@ -86,11 +90,21 @@ class Quadcopter:
         c_th, s_th = np.cos(theta), np.sin(theta)
         c_ps, s_ps = np.cos(psi), np.sin(psi)
 
-        R = np.array([
-            [c_th*c_ps, s_ph*s_th*c_ps - c_ph*s_ps, c_ph*s_th*c_ps + s_ph*s_ps],
-            [c_th*s_ps, s_ph*s_th*s_ps + c_ph*c_ps, c_ph*s_th*s_ps - s_ph*c_ps],
-            [-s_th,     s_ph*c_th,                 c_ph*c_th]
-        ])
+        R = np.array(
+            [
+                [
+                    c_th * c_ps,
+                    s_ph * s_th * c_ps - c_ph * s_ps,
+                    c_ph * s_th * c_ps + s_ph * s_ps,
+                ],
+                [
+                    c_th * s_ps,
+                    s_ph * s_th * s_ps + c_ph * c_ps,
+                    c_ph * s_th * s_ps - s_ph * c_ps,
+                ],
+                [-s_th, s_ph * c_th, c_ph * c_th],
+            ]
+        )
         return R
 
     def compute_derivatives(self, state, motor_forces):
@@ -128,11 +142,21 @@ class Quadcopter:
         c_th, s_th = np.cos(theta), np.sin(theta)
         c_ps, s_ps = np.cos(psi), np.sin(psi)
 
-        R = np.array([
-            [c_th*c_ps, s_ph*s_th*c_ps - c_ph*s_ps, c_ph*s_th*c_ps + s_ph*s_ps],
-            [c_th*s_ps, s_ph*s_th*s_ps + c_ph*c_ps, c_ph*s_th*s_ps - s_ph*c_ps],
-            [-s_th,     s_ph*c_th,                 c_ph*c_th]
-        ])
+        R = np.array(
+            [
+                [
+                    c_th * c_ps,
+                    s_ph * s_th * c_ps - c_ph * s_ps,
+                    c_ph * s_th * c_ps + s_ph * s_ps,
+                ],
+                [
+                    c_th * s_ps,
+                    s_ph * s_th * s_ps + c_ph * c_ps,
+                    c_ph * s_th * s_ps - s_ph * c_ps,
+                ],
+                [-s_th, s_ph * c_th, c_ph * c_th],
+            ]
+        )
 
         # 1. Translational equations: mdv/dt = m*g + R*F_thrust - c_drag*v
         g_vec = np.array([0.0, 0.0, -self.g])
@@ -140,7 +164,7 @@ class Quadcopter:
         thrust_world = R @ thrust_body
 
         # Drag acceleration
-        accel_drag = - (self.c_drag / self.mass) * vel
+        accel_drag = -(self.c_drag / self.mass) * vel
 
         accel = g_vec + (thrust_world / self.mass) + accel_drag
 
@@ -150,11 +174,13 @@ class Quadcopter:
         if abs(cos_theta) < 1e-4:
             cos_theta = 1e-4 * np.sign(cos_theta)
 
-        W = np.array([
-            [1.0, np.sin(phi)*np.tan(theta), np.cos(phi)*np.tan(theta)],
-            [0.0, np.cos(phi),              -np.sin(phi)],
-            [0.0, np.sin(phi)/cos_theta,     np.cos(phi)/cos_theta]
-        ])
+        W = np.array(
+            [
+                [1.0, np.sin(phi) * np.tan(theta), np.cos(phi) * np.tan(theta)],
+                [0.0, np.cos(phi), -np.sin(phi)],
+                [0.0, np.sin(phi) / cos_theta, np.cos(phi) / cos_theta],
+            ]
+        )
         euler_dot = W @ omega
 
         # 3. Rotational dynamics: I * domega/dt = tau - omega x (I * omega)
@@ -182,13 +208,13 @@ class Quadcopter:
         k3 = self.compute_derivatives(self.state + 0.5 * dt * k2, motor_forces)
         k4 = self.compute_derivatives(self.state + dt * k3, motor_forces)
 
-        self.state += (dt / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4)
+        self.state += (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
 
         # Simple ground constraint (cannot fly below ground)
         if self.state[2] < 0.0:
-            self.state[2] = 0.0     # Position z = 0
-            self.state[5] = 0.0     # Velocity vz = 0
+            self.state[2] = 0.0  # Position z = 0
+            self.state[5] = 0.0  # Velocity vz = 0
             # Damp lateral movement under contact
             self.state[3:5] *= 0.5
-            self.state[9:12] *= 0.5 # Damp angular rate on crash/ground
+            self.state[9:12] *= 0.5  # Damp angular rate on crash/ground
             self.state[6:8] *= 0.5  # Heading remains, roll/pitch flatten

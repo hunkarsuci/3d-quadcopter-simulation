@@ -1,7 +1,9 @@
 import numpy as np
 
+
 class PIDController:
     """Standard PID Controller class with anti-windup."""
+
     def __init__(self, kp, ki, kd, limit_integral=None, limit_output=None):
         self.kp = kp
         self.ki = ki
@@ -19,7 +21,9 @@ class PIDController:
         # Integral term with anti-windup clamping
         self.integral += error * dt
         if self.limit_integral is not None:
-            self.integral = np.clip(self.integral, -self.limit_integral, self.limit_integral)
+            self.integral = np.clip(
+                self.integral, -self.limit_integral, self.limit_integral
+            )
         i_term = self.ki * self.integral
 
         # Derivative term
@@ -42,6 +46,7 @@ class CascadedFlightController:
     Cascaded Flight Controller for a quadcopter.
     Contains position loops (outer) and attitude/rate loops (inner).
     """
+
     def __init__(self, mass, g, L, c_tf):
         self.mass = mass
         self.g = g
@@ -51,29 +56,47 @@ class CascadedFlightController:
 
         # 1. Outer Loop: Position Controller (x, y) -> Target Roll/Pitch
         # Output: Desired accelerations or desired Euler angles
-        self.pid_x = PIDController(kp=1.5, ki=0.05, kd=2.0, limit_integral=2.0, limit_output=5.0)
-        self.pid_y = PIDController(kp=1.5, ki=0.05, kd=2.0, limit_integral=2.0, limit_output=5.0)
+        self.pid_x = PIDController(
+            kp=1.5, ki=0.05, kd=2.0, limit_integral=2.0, limit_output=5.0
+        )
+        self.pid_y = PIDController(
+            kp=1.5, ki=0.05, kd=2.0, limit_integral=2.0, limit_output=5.0
+        )
 
         # 2. Altitude Controller: z -> Target Thrust (T)
         # Output: Desired total thrust
-        self.pid_z = PIDController(kp=10.0, ki=1.5, kd=8.0, limit_integral=10.0, limit_output=30.0)
+        self.pid_z = PIDController(
+            kp=10.0, ki=1.5, kd=8.0, limit_integral=10.0, limit_output=30.0
+        )
 
         # 3. Inner Loop: Attitude Controller (phi, theta, psi) -> Target angular rates
         # Output: target body rates (p, q, r)
-        self.pid_roll  = PIDController(kp=6.0, ki=0.1, kd=1.5, limit_integral=1.0, limit_output=6.0)
-        self.pid_pitch = PIDController(kp=6.0, ki=0.1, kd=1.5, limit_integral=1.0, limit_output=6.0)
-        self.pid_yaw   = PIDController(kp=4.0, ki=0.05, kd=1.0, limit_integral=0.5, limit_output=3.0)
+        self.pid_roll = PIDController(
+            kp=6.0, ki=0.1, kd=1.5, limit_integral=1.0, limit_output=6.0
+        )
+        self.pid_pitch = PIDController(
+            kp=6.0, ki=0.1, kd=1.5, limit_integral=1.0, limit_output=6.0
+        )
+        self.pid_yaw = PIDController(
+            kp=4.0, ki=0.05, kd=1.0, limit_integral=0.5, limit_output=3.0
+        )
 
         # 4. Angular Rate Controller (p, q, r) -> Body Moments (tau_x, tau_y, tau_z)
         # Output: Torques (tau_x, tau_y, tau_z)
-        # Often a fast PI or PID loop. Let's make it proportional/integral rate feedback.
-        self.pid_p = PIDController(kp=0.5, ki=0.0, kd=0.02, limit_integral=1.0, limit_output=5.0)
-        self.pid_q = PIDController(kp=0.5, ki=0.0, kd=0.02, limit_integral=1.0, limit_output=5.0)
-        self.pid_r = PIDController(kp=0.8, ki=0.0, kd=0.02, limit_integral=1.0, limit_output=5.0)
+        # Often a fast PI or PID loop.
+        self.pid_p = PIDController(
+            kp=0.5, ki=0.0, kd=0.02, limit_integral=1.0, limit_output=5.0
+        )
+        self.pid_q = PIDController(
+            kp=0.5, ki=0.0, kd=0.02, limit_integral=1.0, limit_output=5.0
+        )
+        self.pid_r = PIDController(
+            kp=0.8, ki=0.0, kd=0.02, limit_integral=1.0, limit_output=5.0
+        )
 
         # Constraints
-        self.max_tilt = np.deg2rad(25.0) # Maximum commandable roll/pitch angle
-        self.max_motor_thrust = 12.0     # Maximum thrust per motor (N)
+        self.max_tilt = np.deg2rad(25.0)  # Maximum commandable roll/pitch angle
+        self.max_motor_thrust = 12.0  # Maximum thrust per motor (N)
 
     def control(self, state, target_pos, target_yaw, dt):
         """
@@ -106,13 +129,13 @@ class CascadedFlightController:
         # Rotate desired accelerations to the yaw-aligned body frame
         # to find desired roll and pitch
         cos_psi, sin_psi = np.cos(psi), np.sin(psi)
-        acc_x_body =  cos_psi * acc_x_des + sin_psi * acc_y_des
+        acc_x_body = cos_psi * acc_x_des + sin_psi * acc_y_des
         acc_y_body = -sin_psi * acc_x_des + cos_psi * acc_y_des
 
         # Calculate target Euler angles
         # Acc_x (forward) requires positive pitch theta.
-        # Acc_y (leftward, positive y) requires negative roll phi (tilts rightward to slide left? No, let's trace:
-        # positive roll tilts rightward, pointing thrust rightward, accelerating rightward (negative y).
+        # Acc_y (leftward, positive y) requires negative roll phi.
+        # Positive roll points thrust rightward, causing negative-y acceleration.
         # So leftward acceleration (positive y) requires negative roll.
         theta_des = acc_x_body / self.g
         phi_des = -acc_y_body / self.g
@@ -145,12 +168,14 @@ class CascadedFlightController:
         # F4 = 1/4 * (T + tau_x/l_fac + tau_y/l_fac + tau_z/c_tf)
         motor_forces = np.zeros(4)
 
-        mixer_matrix = np.array([
-            [1.0,  1.0/self.l_factor, -1.0/self.l_factor, -1.0/self.c_tf],
-            [1.0, -1.0/self.l_factor, -1.0/self.l_factor,  1.0/self.c_tf],
-            [1.0, -1.0/self.l_factor,  1.0/self.l_factor, -1.0/self.c_tf],
-            [1.0,  1.0/self.l_factor,  1.0/self.l_factor,  1.0/self.c_tf]
-        ])
+        mixer_matrix = np.array(
+            [
+                [1.0, 1.0 / self.l_factor, -1.0 / self.l_factor, -1.0 / self.c_tf],
+                [1.0, -1.0 / self.l_factor, -1.0 / self.l_factor, 1.0 / self.c_tf],
+                [1.0, -1.0 / self.l_factor, 1.0 / self.l_factor, -1.0 / self.c_tf],
+                [1.0, 1.0 / self.l_factor, 1.0 / self.l_factor, 1.0 / self.c_tf],
+            ]
+        )
 
         controls = np.array([total_thrust, tau_x, tau_y, tau_z])
         motor_forces = 0.25 * (mixer_matrix @ controls)
@@ -160,15 +185,15 @@ class CascadedFlightController:
 
         # Return control structure info for logging
         control_log = {
-            'throttle': total_thrust,
-            'tau_x': tau_x,
-            'tau_y': tau_y,
-            'tau_z': tau_z,
-            'phi_des': phi_des,
-            'theta_des': theta_des,
-            'p_des': p_des,
-            'q_des': q_des,
-            'r_des': r_des
+            "throttle": total_thrust,
+            "tau_x": tau_x,
+            "tau_y": tau_y,
+            "tau_z": tau_z,
+            "phi_des": phi_des,
+            "theta_des": theta_des,
+            "p_des": p_des,
+            "q_des": q_des,
+            "r_des": r_des,
         }
 
         return motor_forces, control_log

@@ -1,6 +1,12 @@
 # 3D Quadcopter Flight Simulation
 
 [![CI](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/ci.yml/badge.svg)](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/ci.yml)
+[![Release](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/release.yml/badge.svg)](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/release.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Lint: Ruff](https://img.shields.io/badge/lint-ruff-46a2f1)](https://github.com/astral-sh/ruff)
+[![Coverage](https://img.shields.io/badge/coverage-report%20in%20CI-brightgreen)](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/ci.yml)
 
 A Python simulation of a quadcopter UAV with rigid-body dynamics, cascaded PID flight control, waypoint tracking, telemetry plots, and 3D flight animation.
 
@@ -93,6 +99,29 @@ The tests currently check:
 
 - Hover convergence near a target altitude.
 - Ballistic falling behavior under zero motor thrust.
+
+## Quality Checks
+
+The GitHub Actions workflow runs these checks on pushes and pull requests:
+
+- Ruff linting
+- Black formatting validation
+- Python compilation
+- Unit and smoke tests with coverage
+- Headless Matplotlib visualization checks
+- CI artifact generation for a telemetry plot and short flight GIF
+
+You can run the main local checks with:
+
+```bash
+pip install -r requirements-dev.txt
+ruff check .
+black --check .
+coverage run -m unittest discover
+coverage report
+```
+
+Release assets are generated automatically when a version tag such as `v1.0.0` is pushed.
 
 ## Simulation Model
 
