@@ -1,5 +1,7 @@
 # 3D Quadcopter Flight Simulation
 
+[![CI](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/ci.yml/badge.svg)](https://github.com/hunkarsuci/3d-quadcopter-simulation/actions/workflows/ci.yml)
+
 A Python simulation of a quadcopter UAV with rigid-body dynamics, cascaded PID flight control, waypoint tracking, telemetry plots, and 3D flight animation.
 
 The project models a quadrotor from first principles using Newton-Euler equations and a fourth-order Runge-Kutta integrator. It is intended as an educational simulation for understanding drone physics, control loops, and trajectory tracking.
