@@ -3,12 +3,17 @@ import numpy as np
 import sys
 import os
 
-# Adjust paths to import the simulation package correctly
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Allow tests to run both from a package checkout and directly from the repo root.
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from drone_simulation.quadcopter import Quadcopter
-from drone_simulation.controller import CascadedFlightController
-from drone_simulation.simulator import QuadcopterSimulator
+try:
+    from drone_simulation.quadcopter import Quadcopter
+    from drone_simulation.controller import CascadedFlightController
+    from drone_simulation.simulator import QuadcopterSimulator
+except ImportError:
+    from quadcopter import Quadcopter
+    from controller import CascadedFlightController
+    from simulator import QuadcopterSimulator
 
 
 class TestDroneSimulationSmoke(unittest.TestCase):
