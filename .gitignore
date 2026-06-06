@@ -1,0 +1,18 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Local simulation output and path logs
+drone_flight.gif
+*.gif
+!assets/
+!assets/drone_flight.gif
+*.log
+
+# Project/IDE files
+.vscode/
+.idea/
+.claude/
